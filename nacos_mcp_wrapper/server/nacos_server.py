@@ -1,33 +1,23 @@
 import json
 import logging
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
-from typing import Literal, Callable, AsyncIterator
+from typing import Literal, Callable, AsyncIterator, Any
 
+import jsonref
 from mcp import types, Tool
 from mcp.server import Server
 from mcp.server.lowlevel.server import LifespanResultT
+from mcp.server.lowlevel.server import lifespan
 from v2.nacos import NacosConfigService, ConfigParam, \
 	NacosNamingService, RegisterInstanceParam, ClientConfigBuilder
 
 from nacos_mcp_wrapper.server.mcp_server_info import MCPServerInfo, ServiceRef, \
 	RemoteServerConfig
 from nacos_mcp_wrapper.server.nacos_settings import NacosSettings
-from nacos_mcp_wrapper.server.utils import get_first_non_loopback_ip, ConfigSuffix
+from nacos_mcp_wrapper.server.utils import get_first_non_loopback_ip, \
+	ConfigSuffix, jsonref_default
 
 logger = logging.getLogger(__name__)
-
-@asynccontextmanager
-async def lifespan(server: Server[LifespanResultT]) -> AsyncIterator[object]:
-	"""Default lifespan context manager that does nothing.
-
-	Args:
-		server: The server instance this lifespan is managing
-
-	Returns:
-		An empty context object
-	"""
-	yield {}
-
 
 class NacosServer(Server):
 	def __init__(
@@ -102,13 +92,42 @@ class NacosServer(Server):
 
 	async def tool_list_listener(self, tenant_id: str, group_id: str,
 			data_id: str, content: str):
-		tool_list = json.loads(content)
-		self._tools_meta = tool_list["toolsMeta"]
-		for tool in tool_list["tools"]:
-			local_tool = self._tmp_tools.get(tool["name"])
-			if local_tool is None:
-				continue
-			local_tool.description = tool["description"]
+		self.update_local_tools(content)
+
+	def update_local_tools(self,nacos_tools:str):
+		def update_args_description(_local_args:dict[str, Any], _nacos_args:dict[str, Any]):
+			for key, value in _local_args.items():
+				if key in _nacos_args and "description" in _nacos_args[key]:
+					_local_args[key]["description"] = _nacos_args[key][
+						"description"]
+
+		nacos_tools_dict = json.loads(nacos_tools)
+		self._tools_meta = nacos_tools_dict["toolsMeta"]
+		for nacos_tool in nacos_tools_dict["tools"]:
+			if nacos_tool["name"] in self._tmp_tools:
+				local_tool = self._tmp_tools[nacos_tool["name"]]
+				if "description" in nacos_tool:
+					local_tool.description = nacos_tool["description"]
+
+				local_args = local_tool.inputSchema["properties"]
+				nacos_args = nacos_tool["inputSchema"]["properties"]
+				update_args_description(local_args, nacos_args)
+				break
+
+	async def init_tools_tmp(self):
+		_tmp_tools = await self.request_handlers[
+			types.ListToolsRequest](
+				self)
+		for _tmp_tool in _tmp_tools.root.tools:
+			self._tmp_tools[_tmp_tool.name] = _tmp_tool
+		self._tmp_tools_list_handler = self.request_handlers[
+			types.ListToolsRequest]
+
+		for tool in self._tmp_tools.values():
+			resolved_data = jsonref.JsonRef.replace_refs(tool.inputSchema)
+			resolved_data = json.dumps(resolved_data, default=jsonref_default)
+			resolved_data = json.loads(resolved_data)
+			tool.inputSchema = resolved_data
 
 	async def register_to_nacos(self,
 			transport: Literal["stdio", "sse"] = "stdio",
@@ -122,29 +141,20 @@ class NacosServer(Server):
 			mcp_servers_data_id = self.name + ConfigSuffix.MCP_SERVER.value
 
 			if types.ListToolsRequest in self.request_handlers:
-				_tmp_tools = await self.request_handlers[
-					types.ListToolsRequest](
-						self)
-				for _tmp_tool in _tmp_tools.root.tools:
-					self._tmp_tools[_tmp_tool.name] = _tmp_tool
-				self._tmp_tools_list_handler = self.request_handlers[
-					types.ListToolsRequest]
-				tools_dict = _tmp_tools.model_dump(
-						by_alias=True, mode="json", exclude_none=True
-				)
+				await self.init_tools_tmp()
+				self.list_tools()(self._list_tmp_tools)
+
 				nacos_tools = await config_client.get_config(ConfigParam(
 						data_id=mcp_tools_data_id, group="mcp-tools"
 				))
 				if nacos_tools is not None and nacos_tools != "":
-					nacos_tools_dict = json.loads(nacos_tools)
-					self._tools_meta = nacos_tools_dict["toolsMeta"]
-					for nacos_tool in nacos_tools_dict["tools"]:
-						for tool in tools_dict["tools"]:
-							if tool["name"] == nacos_tool["name"]:
-								tool["description"] = nacos_tool["description"]
-								self._tmp_tools[tool["name"]].description = \
-									nacos_tool["description"]
-								break
+					self.update_local_tools(nacos_tools)
+				_tmp_tools = await self.request_handlers[
+					types.ListToolsRequest](
+						self)
+				tools_dict = _tmp_tools.model_dump(
+						by_alias=True, mode="json", exclude_none=True
+				)
 				tools_dict["toolsMeta"] = self._tools_meta
 				await config_client.publish_config(ConfigParam(
 						data_id=mcp_tools_data_id, group="mcp-tools",
@@ -207,4 +217,3 @@ class NacosServer(Server):
 				))
 		except Exception as e:
 			logging.error(f"Failed to register MCP server to Nacos: {e}")
-

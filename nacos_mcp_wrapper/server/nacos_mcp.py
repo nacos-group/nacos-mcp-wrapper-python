@@ -4,15 +4,18 @@ import logging
 from typing import Literal, Any
 
 import anyio
+import jsonref
 import mcp.types as types
 from mcp.server import FastMCP
+from mcp.server.fastmcp.tools import Tool
 from v2.nacos import NacosConfigService, ConfigParam, \
 	NacosNamingService, RegisterInstanceParam, ClientConfigBuilder
 
 from nacos_mcp_wrapper.server.nacos_settings import NacosSettings
 from nacos_mcp_wrapper.server.mcp_server_info import MCPServerInfo, RemoteServerConfig, \
 	ServiceRef
-from nacos_mcp_wrapper.server.utils import get_first_non_loopback_ip, ConfigSuffix
+from nacos_mcp_wrapper.server.utils import get_first_non_loopback_ip, \
+	ConfigSuffix, jsonref_default
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +59,7 @@ class NacosMCP(FastMCP):
 					self._nacos_settings.CREDENTIAL_PROVIDER)
 
 		self._config_client_config = config_client_config_builder.build()
+		self._tmp_tools: dict[str, Tool] = {}
 		self._tools_meta = {}
 
 	def run(self, transport: Literal["stdio", "sse"] = "stdio") -> None:
@@ -78,13 +82,7 @@ class NacosMCP(FastMCP):
 
 	async def tool_list_listener(self, tenant_id: str, group_id: str,
 			data_id: str, content: str):
-		tool_list = json.loads(content)
-		self._tools_meta = tool_list["toolsMeta"]
-		for tool in tool_list["tools"]:
-			local_tool = self._tool_manager.get_tool(tool["name"])
-			if local_tool is None:
-				continue
-			local_tool.description = tool["description"]
+		self.update_local_tools(content)
 
 	async def _list_tmp_tools(self) -> list[types.Tool]:
 		"""List all available tools."""
@@ -105,6 +103,36 @@ class NacosMCP(FastMCP):
 					return False
 		return True
 
+	def update_local_tools(self,nacos_tools:str):
+
+		def update_args_description(local_args:dict[str, Any], nacos_args:dict[str, Any]):
+			for key, value in local_args.items():
+				if key in nacos_args and "description" in nacos_args[key]:
+					local_args[key]["description"] = nacos_args[key][
+						"description"]
+
+		nacos_tools_dict = json.loads(nacos_tools)
+		self._tools_meta = nacos_tools_dict["toolsMeta"]
+		for nacos_tool in nacos_tools_dict["tools"]:
+			if nacos_tool["name"] in self._tmp_tools:
+				local_tool = self._tmp_tools[nacos_tool["name"]]
+				if "description" in nacos_tool:
+					local_tool.description = nacos_tool["description"]
+
+				local_args = local_tool.parameters["properties"]
+				nacos_args = nacos_tool["inputSchema"]["properties"]
+				update_args_description(local_args, nacos_args)
+				break
+
+	def init_tools_tmp(self):
+		self._tmp_tools = self._tool_manager._tools
+
+		for tool in self._tmp_tools.values():
+			resolved_data = jsonref.JsonRef.replace_refs(tool.parameters)
+			resolved_data = json.dumps(resolved_data, default=jsonref_default)
+			resolved_data = json.loads(resolved_data)
+			tool.parameters = resolved_data
+
 	async def async_nacos_register_mcp(self,
 			transport: Literal["stdio", "sse"] = "stdio",
 	):
@@ -115,25 +143,17 @@ class NacosMCP(FastMCP):
 			mcp_tools_data_id = self._mcp_server.name + ConfigSuffix.TOOLS.value
 			mcp_servers_data_id = self._mcp_server.name + ConfigSuffix.MCP_SERVER.value
 			if types.ListToolsRequest in self._mcp_server.request_handlers:
+				self.init_tools_tmp()
+				nacos_tools = await config_client.get_config(ConfigParam(
+						data_id=mcp_tools_data_id, group="mcp-tools"
+				))
+				if nacos_tools is not None and nacos_tools != "":
+					self.update_local_tools(nacos_tools)
 				tools = await self._mcp_server.request_handlers[
 					types.ListToolsRequest](self)
 				tools_dict = tools.model_dump(
 						by_alias=True, mode="json", exclude_none=True
 				)
-				nacos_tools = await config_client.get_config(ConfigParam(
-						data_id=mcp_tools_data_id, group="mcp-tools"
-				))
-				if nacos_tools is not None and nacos_tools != "":
-					nacos_tools_dict = json.loads(nacos_tools)
-					self._tools_meta = nacos_tools_dict["toolsMeta"]
-					for nacos_tool in nacos_tools_dict["tools"]:
-						for tool in tools_dict["tools"]:
-							if nacos_tool["name"] == tool["name"]:
-								tool["description"] = nacos_tool["description"]
-								self._tool_manager.get_tool(
-										nacos_tool["name"]).description = \
-									nacos_tool["description"]
-								break
 				tools_dict["toolsMeta"] = self._tools_meta
 				await config_client.publish_config(ConfigParam(
 						data_id=mcp_tools_data_id, group="mcp-tools",

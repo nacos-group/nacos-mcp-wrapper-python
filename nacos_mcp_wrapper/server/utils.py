@@ -3,6 +3,7 @@ import socket
 import threading
 from enum import Enum
 
+import jsonref
 import psutil
 
 def get_first_non_loopback_ip():
@@ -12,6 +13,12 @@ def get_first_non_loopback_ip():
 					'127.'):
 				return addr.address
 	return None
+
+def jsonref_default(obj):
+	if isinstance(obj, jsonref.JsonRef):
+		return obj.__subject__
+	raise TypeError(
+			f"Object of type {obj.__class__.__name__} is not JSON serializable")
 
 class ConfigSuffix(Enum):
 	TOOLS = "-mcp-tools.json"
