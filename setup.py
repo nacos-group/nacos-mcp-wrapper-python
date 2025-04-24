@@ -12,6 +12,8 @@ setup(
     version='1.0.0',  # 项目的版本号
 	packages=find_packages(
 			exclude=["test", "*.tests", "*.tests.*", "tests.*", "tests"]), # 自动发现所有包
+	url="https://github.com/nacos-group/nacos-mcp-wrapper-python",
+    license="Apache License 2.0",
 	install_requires=read_requirements(),
     author='nacos',
     description='Python sdk support mcp server auto register to nacos',  # 项目的简短描述
