@@ -1,0 +1,20 @@
+import asyncio
+import socket
+import threading
+from enum import Enum
+
+import psutil
+
+def get_first_non_loopback_ip():
+	for interface, addrs in psutil.net_if_addrs().items():
+		for addr in addrs:
+			if addr.family == socket.AF_INET and not addr.address.startswith(
+					'127.'):
+				return addr.address
+	return None
+
+class ConfigSuffix(Enum):
+	TOOLS = "-mcp-tools.json"
+	PROMPTS = "-mcp-prompt.json"
+	RESOURCES = "-mcp-resource.json"
+	MCP_SERVER = "-mcp-server.json"

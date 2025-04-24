@@ -1,0 +1,7 @@
+setuptools==68.2.0
+psutil==7.0.0
+anyio==4.9.0
+mcp==1.6.0
+nacos-sdk-python==2.0.4
+pydantic==2.11.3
+pydantic-settings==2.9.1
