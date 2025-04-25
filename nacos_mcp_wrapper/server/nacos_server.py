@@ -191,6 +191,7 @@ class NacosServer(Server):
 								service_name=self.name + "-mcp-service",
 								ip=self._nacos_settings.SERVICE_IP,
 								port=port,
+								ephemeral=self._nacos_settings.SERVICE_EPHEMERAL,
 						)
 				)
 				mcp_server_info = MCPServerInfo(

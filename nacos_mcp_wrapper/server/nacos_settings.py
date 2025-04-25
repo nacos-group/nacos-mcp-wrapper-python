@@ -18,6 +18,10 @@ class NacosSettings(BaseSettings):
 	SERVICE_REGISTER : bool = Field(
 			description="whether to register service to nacos",
 			default=True)
+	
+	SERVICE_EPHEMERAL : bool = Field(
+			description="whether to register service as ephemeral",
+			default=True)
 
 	SERVICE_NAMESPACE : str = Field(
 			description="nacos service namespace",
