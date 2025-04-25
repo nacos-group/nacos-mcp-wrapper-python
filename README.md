@@ -1,5 +1,5 @@
 # nacos-mcp-wrapper-python
-Nacos mcp wrapper Python sdk
+Nacos-mcp-wrapper-python helps you quickly register your Mcp Server on Nacos. By using Nacos to host your Mcp Server, it supports dynamic modifications of the descriptions for Mcp Server Tools and their corresponding parameters, assisting in the rapid evolution of your Mcp Server.
 
 ## How to use:
 1. Install:
