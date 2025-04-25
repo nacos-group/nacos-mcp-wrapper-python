@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 class NacosServer(Server):
 	def __init__(
 			self,
-			nacos_settings: NacosSettings,
 			name: str,
+			nacos_settings: NacosSettings | None = None,
 			version: str | None = None,
 			instructions: str | None = None,
 			lifespan: Callable[
@@ -32,6 +32,11 @@ class NacosServer(Server):
 			] = lifespan,
 	):
 		super().__init__(name, version, instructions, lifespan)
+
+		if nacos_settings == None:
+			nacos_settings = NacosSettings()
+		if nacos_settings.SERVICE_NAMESPACE == "":
+			nacos_settings.SERVICE_NAMESPACE = "public"
 
 		self._nacos_settings = nacos_settings
 		if self._nacos_settings.SERVICE_IP is None:
@@ -62,7 +67,7 @@ class NacosServer(Server):
 				self._nacos_settings.APP_CONN_LABELS)
 
 		if self._nacos_settings.CREDENTIAL_PROVIDER is not None:
-			naming_client_config_builder.credentials_provider(
+			config_client_config_builder.credentials_provider(
 					self._nacos_settings.CREDENTIAL_PROVIDER)
 
 		self._config_client_config = config_client_config_builder.build()

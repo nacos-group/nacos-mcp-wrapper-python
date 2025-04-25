@@ -25,7 +25,7 @@ class NacosSettings(BaseSettings):
 
 	SERVICE_NAMESPACE : str = Field(
 			description="nacos service namespace",
-			default="")
+			default="public")
 
 	SERVICE_GROUP : str = Field(
 			description="nacos service group",

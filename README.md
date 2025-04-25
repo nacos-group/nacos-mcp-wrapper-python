@@ -34,8 +34,8 @@ from nacos_mcp_wrapper.server.nacos_settings import NacosSettings
 # Create an MCP server
 # mcp = FastMCP("Demo")
 nacos_settings = NacosSettings()
-nacos_settings.SERVER_ADDR = "<nacos_server_addr>"
-mcp = NacosMCP(nacos_settings, "nacos-mcp-python")
+nacos_settings.SERVER_ADDR = "<nacos_server_addr> e.g.127.0.0.1:8848"
+mcp = NacosMCP("nacos-mcp-python",nacos_settings=nacos_settings)
 
 
 # Add an addition tool
@@ -43,6 +43,8 @@ mcp = NacosMCP(nacos_settings, "nacos-mcp-python")
 def add(a: int, b: int) -> int:
     """Add two numbers"""
     return a + b
+
+mcp.run(transport="sse")
 ```
 After registering to Nacos, you can dynamically update the descriptions of Tools and the descriptions of parameters in the Mcp Server on Nacos without restarting your Mcp Server.
 
@@ -59,8 +61,8 @@ from nacos_mcp_wrapper.server.nacos_server import NacosServer
 from nacos_mcp_wrapper.server.nacos_settings import NacosSettings
 
 nacos_settings = NacosSettings()
-nacos_settings.SERVER_ADDR = "<nacos_server_addr>"
-app = NacosServer(nacos_settings,"mcp-website-fetcher")
+nacos_settings.SERVER_ADDR = "<nacos_server_addr> e.g.127.0.0.1:8848"
+app = NacosServer("mcp-website-fetcher",nacos_settings=nacos_settings)
 ```
 
 For more examples, please refer to the content under the `example` directory.

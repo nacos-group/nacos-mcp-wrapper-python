@@ -26,14 +26,14 @@ async def fetch_website(
 @click.option(
     "--transport",
     type=click.Choice(["stdio", "sse"]),
-    default="stdio",
+    default="sse",
     help="Transport type",
 )
 def main(port: int, transport: str) -> int:
     nacos_settings = NacosSettings()
-    nacos_settings.SERVER_ADDR = "<nacos_server_addr>"
+    nacos_settings.SERVER_ADDR = "<nacos_server_addr> e.g. 127.0.0.1:8848"
     # app = Server("mcp-website-fetcher")
-    app = NacosServer(nacos_settings,"mcp-website-fetcher")
+    app = NacosServer("mcp-website-fetcher",nacos_settings=nacos_settings)
 
     @app.call_tool()
     async def fetch_tool(

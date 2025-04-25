@@ -14,8 +14,9 @@ logger = logging.getLogger(__name__)
 
 class NacosMCP(FastMCP):
 
-	def __init__(self, nacos_settings: NacosSettings,
+	def __init__(self,
 			name: str | None = None,
+			nacos_settings: NacosSettings | None = None,
 			instructions: str | None = None,
 			**settings: Any):
 		super().__init__(name, instructions, **settings)
