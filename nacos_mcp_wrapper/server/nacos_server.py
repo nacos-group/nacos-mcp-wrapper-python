@@ -182,18 +182,19 @@ class NacosServer(Server):
 				))
 
 			elif transport == "sse":
-				naming_client = await NacosNamingService.create_naming_service(
-						self._naming_client_config)
+				if self._nacos_settings.SERVICE_REGISTER:
+					naming_client = await NacosNamingService.create_naming_service(
+							self._naming_client_config)
 
-				await naming_client.register_instance(
-						request=RegisterInstanceParam(
-								group_name=self._nacos_settings.SERVICE_GROUP,
-								service_name=self.name + "-mcp-service",
-								ip=self._nacos_settings.SERVICE_IP,
-								port=port,
-								ephemeral=self._nacos_settings.SERVICE_EPHEMERAL,
-						)
-				)
+					await naming_client.register_instance(
+							request=RegisterInstanceParam(
+									group_name=self._nacos_settings.SERVICE_GROUP,
+									service_name=self.name + "-mcp-service",
+									ip=self._nacos_settings.SERVICE_IP,
+									port=port,
+									ephemeral=self._nacos_settings.SERVICE_EPHEMERAL,
+							)
+					)
 				mcp_server_info = MCPServerInfo(
 						protocol="mcp-sse",
 						name=self.name,
