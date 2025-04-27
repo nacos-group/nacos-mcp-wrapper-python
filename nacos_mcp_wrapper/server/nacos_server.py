@@ -107,7 +107,10 @@ class NacosServer(Server):
 						"description"]
 
 		nacos_tools_dict = json.loads(nacos_tools)
-		self._tools_meta = nacos_tools_dict["toolsMeta"]
+		if "toolsMeta" in nacos_tools_dict:
+			self._tools_meta = nacos_tools_dict["toolsMeta"]
+		if "tools" not in nacos_tools_dict:
+			return
 		for nacos_tool in nacos_tools_dict["tools"]:
 			if nacos_tool["name"] in self._tmp_tools:
 				local_tool = self._tmp_tools[nacos_tool["name"]]
@@ -169,11 +172,23 @@ class NacosServer(Server):
 				await config_client.add_listener(mcp_tools_data_id, "mcp-tools",
 												 self.tool_list_listener)
 
+			server_info_content = await config_client.get_config(ConfigParam(
+						data_id=mcp_servers_data_id, group="mcp-server"
+			))
+
+			server_description = self.name
+			if self.instructions is not None:
+				server_description = self.instructions
+			if server_info_content is not None and server_info_content != "":
+				server_info_dict = json.loads(server_info_content)
+				if "description" in server_info_dict:
+					server_description = server_info_dict["description"]
+
 			if transport == "stdio":
 				mcp_server_info = MCPServerInfo(
 						protocol="local",
 						name=self.name,
-						description=self.instructions,
+						description=server_description,
 						version=self.version,
 						toolsDescriptionRef=mcp_tools_data_id,
 				)
