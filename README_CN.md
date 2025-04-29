@@ -1,21 +1,22 @@
 # nacos-mcp-wrapper-python
+[English Document](./README.md)  
+## 概述
+Nacos-mcp-wrapper-python 是一个帮助你快速将 Mcp Server注册到 Nacos 的 SDK。
 
-[中文文档](./README_CN.md)  
+Nacos 一个更易于构建云原生应用的动态服务发现、配置管理和服务管理平台。Nacos提供了一组简单易用的特性集，帮助您快速实现动态服务发现、服务配置、服务元数据及流量管理。
 
-## Overview
-Nacos-mcp-wrapper-python is a sdk that helps you quickly register your Mcp Server to Nacos. Nacos is an easy-to-use platform designed for dynamic service discovery and configuration and service management. It helps you to build cloud native applications and microservices platform easily. By using Nacos to host your Mcp Server, it supports dynamic modifications of the descriptions for Mcp Server Tools and their corresponding parameters, assisting in the rapid evolution of your Mcp Server.
+通过使用Nacos-mcp-wrapper-python 将Mcp Server 注册到Nacos，你可以通过Nacos实现 对 Mcp server Tools及其对应参数的描述进行动态修改，从而助力你的 Mcp Server快速演进。
+## 安装
 
-## Installation
-
-### Environment
+### 环境要求
 - python >=3.10
-### Use pip
+### 使用 PIP
 ```bash
 pip install nacos-mcp-wrapper-python
 ```
 
-## Development
-We can use official MCP Python SDK to quickly build a mcp server:
+## 开发
+我们可以使用官方社区的 MCP Python SDK 快速构建一个 MCP Server：
 ```python
 # server.py
 from mcp.server.fastmcp import FastMCP
@@ -32,7 +33,7 @@ def add(a: int, b: int) -> int:
 
 mcp.run(transport="sse")
 ```
-To quickly register your Mcp Server to Nacos, just replace the FashMCP with NacosMCP:
+要快速将你的 Mcp Server 注册到 Nacos，只需将 FastMCP 替换为 NacosMCP：
 
 ```python
 # server.py
@@ -54,11 +55,10 @@ def add(a: int, b: int) -> int:
 
 mcp.run(transport="sse")
 ```
-After registering to Nacos, you can dynamically update the descriptions of Tools and the descriptions of parameters in the Mcp Server on Nacos without restarting your Mcp Server.
+在将 Mcp Server 注册到 Nacos 后，你可以在不重启 Mcp Server 的情况下，动态更新 Nacos 上 Mcp Server 中工具及其参数的描述。
+### 进阶用法
 
-### Advanced Usage
-
-When building an MCP server using the official MCP Python SDK, for more control, you can directly use the low-level server implementation, for more control, you can use the low-level server implementation directly. This gives you full access to the protocol and allows you to customize every aspect of your server, including lifecycle management through the lifespan API.
+在使用官方 MCP Python SDK 构建 MCP Server时，如果你需要控制服务器的细节，可以直接使用低级别的Server实现。这将允许你自定义服务器的各个方面，包括通过 lifespan API 进行生命周期管理。
 ```python
 import mcp.server.stdio
 import mcp.types as types
@@ -133,8 +133,7 @@ if __name__ == "__main__":
     asyncio.run(run())
 ```
 
-To quickly register your Mcp Server to Nacos, just replace the Server with NacosServer:
-
+要快速将你的 Mcp Server 注册到 Nacos，只需将 Server 替换为 NacosServer：
 ```python
 import mcp.server.stdio
 import mcp.types as types
@@ -214,5 +213,4 @@ if __name__ == "__main__":
 
 ```
 
-For more examples, please refer to the content under the `example` directory.
-
+更多示例和使用方式，请参阅 example 目录下的内容。
