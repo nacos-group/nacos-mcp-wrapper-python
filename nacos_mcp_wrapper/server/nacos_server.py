@@ -48,7 +48,9 @@ class NacosServer(Server):
 				self._nacos_settings.SERVER_ENDPOINT).namespace_id(
 				self._nacos_settings.SERVICE_NAMESPACE).access_key(
 				self._nacos_settings.ACCESS_KEY).secret_key(
-				self._nacos_settings.SECRET_KEY).app_conn_labels(
+				self._nacos_settings.SECRET_KEY).username(
+				self._nacos_settings.USERNAME).password(
+				self._nacos_settings.PASSWORD).app_conn_labels(
 				self._nacos_settings.APP_CONN_LABELS)
 
 		if self._nacos_settings.CREDENTIAL_PROVIDER is not None:
@@ -63,7 +65,9 @@ class NacosServer(Server):
 				self._nacos_settings.SERVER_ENDPOINT).namespace_id(
 				"nacos-default-mcp").access_key(
 				self._nacos_settings.ACCESS_KEY).secret_key(
-				self._nacos_settings.SECRET_KEY).app_conn_labels(
+				self._nacos_settings.SECRET_KEY).username(
+				self._nacos_settings.USERNAME).password(
+				self._nacos_settings.PASSWORD).app_conn_labels(
 				self._nacos_settings.APP_CONN_LABELS)
 
 		if self._nacos_settings.CREDENTIAL_PROVIDER is not None:
