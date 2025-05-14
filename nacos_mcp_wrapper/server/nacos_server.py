@@ -190,7 +190,7 @@ class NacosServer(Server):
 
 			if transport == "stdio":
 				mcp_server_info = MCPServerInfo(
-						protocol="local",
+						protocol="stdio",
 						name=self.name,
 						description=server_description,
 						version=self.version,
