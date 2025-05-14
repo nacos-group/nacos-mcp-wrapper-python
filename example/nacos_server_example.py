@@ -22,16 +22,17 @@ async def fetch_website(
 
 
 @click.command()
-@click.option("--port", default=8000, help="Port to listen on for SSE")
+@click.option("--port", default=18002, help="Port to listen on for SSE")
+@click.option("--server_addr", default="127.0.0.1:8848", help="Nacos server address")
 @click.option(
     "--transport",
     type=click.Choice(["stdio", "sse"]),
     default="sse",
     help="Transport type",
 )
-def main(port: int, transport: str) -> int:
+def main(port: int, transport: str, server_addr: str) -> int:
     nacos_settings = NacosSettings()
-    nacos_settings.SERVER_ADDR = "<nacos_server_addr> e.g. 127.0.0.1:8848"
+    nacos_settings.SERVER_ADDR = server_addr
     # app = Server("mcp-website-fetcher")
     app = NacosServer("mcp-website-fetcher",nacos_settings=nacos_settings)
 
@@ -76,7 +77,7 @@ def main(port: int, transport: str) -> int:
                 async with sse.connect_sse(
                     request.scope, request.receive, request._send
                 ) as streams:
-                    # 0 进 1出
+                    # 0 input stream, 1 output stream
                     await app.run(
                         streams[0], streams[1], app.create_initialization_options()
                     )
