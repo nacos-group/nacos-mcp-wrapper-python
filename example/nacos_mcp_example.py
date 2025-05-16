@@ -1,34 +1,30 @@
 from nacos_mcp_wrapper.server.nacos_mcp import NacosMCP
 from nacos_mcp_wrapper.server.nacos_settings import NacosSettings
 
-# Create an MCP server
-# mcp = FastMCP("Demo")
+# Create an MCP server instance
 nacos_settings = NacosSettings()
-nacos_settings.SERVER_ADDR = "<nacos_server_addr> e.g. 127.0.0.1:8848"
-mcp = NacosMCP("nacos-mcp-python",nacos_settings=nacos_settings)
-# Add an addition tool
+nacos_settings.SERVER_ADDR = "127.0.0.1:8848" # <nacos_server_addr> e.g. 127.0.0.1:8848
+mcp = NacosMCP("nacos-mcp-python", nacos_settings=nacos_settings, port=18001)
 
+# Register an addition tool
 @mcp.tool()
 def add(a: int, b: int) -> int:
-    """Add two numbers"""
+    """Add two integers together"""
     return a + b
 
+# Register a subtraction tool
 @mcp.tool()
 def minus(a: int, b: int) -> int:
     """Subtract two numbers"""
     return a - b
 
+# Register a prompt function
 @mcp.prompt()
 def get_prompt(topic: str) -> str:
     """Get a personalized greeting"""
     return f"Hello, {topic}!"
 
-@mcp.resource("greeting://{name}")
-def get_resource(name: str) -> str:
-    """Get a file"""
-    return f"Hello, {name}!"
-
-# Add a dynamic greeting resource
+# Register a dynamic resource endpoint
 @mcp.resource("greeting://{name}")
 def get_greeting(name: str) -> str:
     """Get a personalized greeting"""
@@ -37,5 +33,5 @@ def get_greeting(name: str) -> str:
 if __name__ == "__main__":
     try:
         mcp.run(transport="sse")
-    except ValueError as e:
-        print(f"运行时发生错误: {e}")
+    except Exception as e:
+        print(f"Runtime error: {e}")
