@@ -44,9 +44,9 @@ class NacosMCP(FastMCP):
 					self._mcp_server.create_initialization_options(),
 			)
 
-	async def run_sse_async(self) -> None:
+	async def run_sse_async(self, mount_path: str | None = None) -> None:
 		"""Run the server using SSE transport."""
-		starlette_app = self.sse_app()
+		starlette_app = self.sse_app(mount_path)
 		await self._mcp_server.register_to_nacos("sse", self.settings.port, self.settings.sse_path)
 		config = uvicorn.Config(
 				starlette_app,
