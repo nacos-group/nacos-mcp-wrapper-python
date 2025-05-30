@@ -45,7 +45,11 @@ class NacosMCP(FastMCP):
 			)
 
 	async def run_sse_async(self, mount_path: str | None = None) -> None:
-		"""Run the server using SSE transport."""
+		"""Run the server using SSE transport.
+		
+		Args:
+			mount_path: The mount path (e.g. "/github" or "/") for the SSE server, the server will be mounted at the root path.
+		"""
 		if mount_path is not None:
 			starlette_app = self.sse_app(mount_path)
 		else:
