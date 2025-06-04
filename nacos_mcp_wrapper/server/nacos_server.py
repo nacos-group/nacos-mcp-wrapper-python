@@ -10,8 +10,6 @@ from maintainer.ai.model.nacos_mcp_info import McpToolMeta, McpServerDetailInfo,
 	McpEndpointSpec, McpServerRemoteServiceConfig
 from maintainer.ai.model.registry_mcp_info import ServerVersionDetail
 from maintainer.ai.nacos_mcp_service import NacosAIMaintainerService
-from maintainer.common.ai_maintainer_client_config import \
-	AIMaintainerClientConfig
 from maintainer.common.ai_maintainer_client_config_builder import \
 	AIMaintainerClientConfigBuilder
 from mcp import types, Tool
