@@ -33,6 +33,8 @@ async def fetch_website(
 def main(port: int, transport: str, server_addr: str) -> int:
     nacos_settings = NacosSettings()
     nacos_settings.SERVER_ADDR = server_addr
+    nacos_settings.USERNAME = ""
+    nacos_settings.PASSWORD = ""
     # app = Server("mcp-website-fetcher")
     app = NacosServer("mcp-website-fetcher",nacos_settings=nacos_settings)
 

@@ -11,10 +11,6 @@ class NacosSettings(BaseSettings):
 			description="nacos server address",
 			default="127.0.0.1:8848")
 
-	SERVER_ENDPOINT : Optional[str] = Field(
-			description="nacos server endpoint",
-			default=None)
-
 	SERVICE_REGISTER : bool = Field(
 			description="whether to register service to nacos",
 			default=True)
@@ -23,13 +19,17 @@ class NacosSettings(BaseSettings):
 			description="whether to register service as ephemeral",
 			default=True)
 
-	SERVICE_NAMESPACE : str = Field(
-			description="nacos service namespace",
+	NAMESPACE : str = Field(
+			description="nacos namespace",
 			default="public")
 
 	SERVICE_GROUP : str = Field(
 			description="nacos service group",
 			default="DEFAULT_GROUP")
+
+	SERVICE_NAME : Optional[str] = Field(
+			description="nacos service name",
+			default=None)
 
 	SERVICE_IP : Optional[str] = Field(
 			description="nacos service ip",

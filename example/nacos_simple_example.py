@@ -12,6 +12,8 @@ def main(port: int, name: str, server_addr: str):
     # Registration settings for Nacos
     nacos_settings = NacosSettings()
     nacos_settings.SERVER_ADDR = server_addr
+    nacos_settings.USERNAME = ""
+    nacos_settings.PASSWORD = ""
     mcp = NacosMCP(name=name, nacos_settings=nacos_settings, port=port)
 
     @mcp.tool()
