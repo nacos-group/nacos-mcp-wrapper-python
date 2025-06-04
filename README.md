@@ -8,6 +8,7 @@ Nacos-mcp-wrapper-python is a sdk that helps you quickly register your Mcp Serve
 ## Installation
 
 ### Environment
+Starting from version 1.0.0 of nacos-mcp-wrapper-python, the Nacos server version must be greater than 3.0.1.
 - python >=3.10
 ### Use pip
 ```bash
