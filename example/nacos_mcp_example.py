@@ -4,6 +4,8 @@ from nacos_mcp_wrapper.server.nacos_settings import NacosSettings
 # Create an MCP server instance
 nacos_settings = NacosSettings()
 nacos_settings.SERVER_ADDR = "127.0.0.1:8848" # <nacos_server_addr> e.g. 127.0.0.1:8848
+nacos_settings.USERNAME=""
+nacos_settings.PASSWORD=""
 mcp = NacosMCP("nacos-mcp-python", nacos_settings=nacos_settings, port=18001)
 
 # Register an addition tool
