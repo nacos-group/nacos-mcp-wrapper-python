@@ -317,13 +317,12 @@ class NacosServer(Server):
 				if self._nacos_settings.SERVICE_REGISTER:
 					naming_client = await NacosNamingService.create_naming_service(
 							self._naming_client_config)
-
 					await naming_client.register_instance(
 							request=RegisterInstanceParam(
 									group_name=self._nacos_settings.SERVICE_GROUP,
 									service_name=self.get_register_service_name(),
 									ip=self._nacos_settings.SERVICE_IP,
-									port=port,
+									port=self._nacos_settings.SERVICE_PORT if self._nacos_settings.SERVICE_PORT else port,
 									ephemeral=self._nacos_settings.SERVICE_EPHEMERAL,
 							)
 					)
