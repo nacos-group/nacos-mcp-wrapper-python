@@ -35,6 +35,10 @@ class NacosSettings(BaseSettings):
 			description="nacos service ip",
 			default=None)
 
+	SERVICE_PORT : Optional[int] = Field(
+			description="nacos service port",
+			default=None)
+
 	USERNAME : Optional[str] = Field(
 			description="nacos username for authentication",
 			default=None)
