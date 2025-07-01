@@ -234,7 +234,6 @@ class NacosServer(Server):
 						self.name,
 						self.version
 				)
-				print(server_detail_info.model_dump_json())
 				if server_detail_info is not None:
 					self.update_tools(server_detail_info)
 			except Exception as e:
@@ -250,6 +249,8 @@ class NacosServer(Server):
 			self.mcp_service = await NacosAIMaintainerService.create_mcp_service(
 					self._ai_client_config
 			)
+			self.naming_client = await NacosNamingService.create_naming_service(
+					self._naming_client_config)
 			server_detail_info = None
 			try:
 				server_detail_info = await self.mcp_service.get_mcp_server_detail(
@@ -273,6 +274,17 @@ class NacosServer(Server):
 				if types.ListToolsRequest in self.request_handlers:
 					self.update_tools(server_detail_info)
 				asyncio.create_task(self.subscribe())
+				if self._nacos_settings.SERVICE_REGISTER and (self.type == "mcp-sse"
+															  or self.type == "mcp-streamable"):
+					await self.naming_client.register_instance(
+							request=RegisterInstanceParam(
+									group_name=self._nacos_settings.SERVICE_GROUP,
+									service_name=self.get_register_service_name(),
+									ip=self._nacos_settings.SERVICE_IP,
+									port=self._nacos_settings.SERVICE_PORT if self._nacos_settings.SERVICE_PORT else port,
+									ephemeral=self._nacos_settings.SERVICE_EPHEMERAL,
+							)
+					)
 				return
 
 			mcp_tool_specification = None
@@ -315,9 +327,7 @@ class NacosServer(Server):
 				server_basic_info.protocol = self.type
 				server_basic_info.frontProtocol = self.type
 				if self._nacos_settings.SERVICE_REGISTER:
-					naming_client = await NacosNamingService.create_naming_service(
-							self._naming_client_config)
-					await naming_client.register_instance(
+					await self.naming_client.register_instance(
 							request=RegisterInstanceParam(
 									group_name=self._nacos_settings.SERVICE_GROUP,
 									service_name=self.get_register_service_name(),

@@ -24,7 +24,6 @@ async def main(
     port: int=7001,
 ) -> int:
     # Configure logging
-    print("hahaha")
     logging.basicConfig(
         level=getattr(logging, log_level.upper()),
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
