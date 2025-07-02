@@ -44,7 +44,10 @@ from nacos_mcp_wrapper.server.nacos_settings import NacosSettings
 # mcp = FastMCP("Demo")
 nacos_settings = NacosSettings()
 nacos_settings.SERVER_ADDR = "<nacos_server_addr> e.g.127.0.0.1:8848"
-mcp = NacosMCP("nacos-mcp-python",nacos_settings=nacos_settings)
+mcp = NacosMCP("nacos-mcp-python", nacos_settings=nacos_settings,
+               port=18001,
+               instructions="This is a simple Nacos MCP server",
+               version="1.0.0")
 
 
 # Add an addition tool

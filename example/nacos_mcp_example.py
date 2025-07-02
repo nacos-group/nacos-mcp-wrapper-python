@@ -6,7 +6,10 @@ nacos_settings = NacosSettings()
 nacos_settings.SERVER_ADDR = "127.0.0.1:8848" # <nacos_server_addr> e.g. 127.0.0.1:8848
 nacos_settings.USERNAME=""
 nacos_settings.PASSWORD=""
-mcp = NacosMCP("nacos-mcp-python", nacos_settings=nacos_settings, port=18001)
+mcp = NacosMCP("nacos-mcp-python", nacos_settings=nacos_settings,
+               port=18001,
+               instructions="This is a simple Nacos MCP server",
+               version="1.0.0")
 
 # Register an addition tool
 @mcp.tool()

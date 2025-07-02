@@ -15,6 +15,16 @@ def get_first_non_loopback_ip():
 				return addr.address
 	return None
 
+
+def pkg_version(package: str) -> str:
+	try:
+		from importlib.metadata import version
+
+		return version(package)
+	except Exception:
+		pass
+	return "1.0.0"
+
 def jsonref_default(obj):
 	if isinstance(obj, jsonref.JsonRef):
 		return obj.__subject__
