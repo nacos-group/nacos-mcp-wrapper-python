@@ -28,8 +28,11 @@ class NacosMCP(FastMCP):
 			event_store: EventStore | None = None,
 			*,
 			tools: list[Tool] | None = None,
+			version: str | None = None,
 			**settings: Any,
 	):
+		if "host" not in settings:
+			settings["host"] = "0.0.0.0"
 		super().__init__(name, instructions, auth_server_provider, event_store,
 						 tools=tools, **settings)
 
@@ -37,6 +40,7 @@ class NacosMCP(FastMCP):
 				nacos_settings=nacos_settings,
 				name=name or "FastMCP",
 				instructions=instructions,
+				version=version,
 				lifespan=lifespan_wrapper(self, self.settings.lifespan)
 				if self.settings.lifespan
 				else default_lifespan,

@@ -22,7 +22,7 @@ from v2.nacos import NacosNamingService, RegisterInstanceParam, \
 
 from nacos_mcp_wrapper.server.nacos_settings import NacosSettings
 from nacos_mcp_wrapper.server.utils import get_first_non_loopback_ip, \
-	jsonref_default, compare
+	jsonref_default, compare, pkg_version
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ class NacosServer(Server):
 			] = lifespan,
 	):
 		if version is None:
-			version = "1.0.0"
+			version = pkg_version("mcp")
 		super().__init__(name, version, instructions, lifespan)
 
 		if nacos_settings == None:
@@ -336,11 +336,31 @@ class NacosServer(Server):
 									ephemeral=self._nacos_settings.SERVICE_EPHEMERAL,
 							)
 					)
-
-			await self.mcp_service.create_mcp_server(self._nacos_settings.NAMESPACE,
-											   self.name,
-											   server_basic_info,
-											   mcp_tool_specification,
-											   endpoint_spec)
+			try:
+				await self.mcp_service.create_mcp_server(self._nacos_settings.NAMESPACE,
+												   self.name,
+												   server_basic_info,
+												   mcp_tool_specification,
+												   endpoint_spec)
+			except Exception as e:
+				logger.info(f"Failed to create MCP server to Nacos,try to update mcp server")
+				version_detail = None
+				try:
+					version_detail = await self.mcp_service.get_mcp_server_detail(
+							self._nacos_settings.NAMESPACE,
+							self.name,
+							self.version
+					)
+				except Exception as e_2:
+					logger.info(f"Cant found version {self.version} of Mcp server {self.name}")
+				if version_detail is None:
+					await self.mcp_service.update_mcp_server(
+							self._nacos_settings.NAMESPACE,
+							self.name,
+							False,
+							server_basic_info,
+							mcp_tool_specification,
+							endpoint_spec
+						)
 		except Exception as e:
 			logging.error(f"Failed to register MCP server to Nacos: {e}")
