@@ -6,4 +6,4 @@ pydantic==2.11.3
 pydantic-settings==2.9.1
 jsonref==1.1.0
 uvicorn==0.34.2
-nacos-maintainer-sdk-python==0.1.0
+nacos-maintainer-sdk-python>=0.1.2

@@ -211,7 +211,7 @@ class NacosServer(Server):
 			return False, f"group name not compatible, local group name:{self._nacos_settings.SERVICE_GROUP}, remote group name:{mcp_service_ref.groupName}"
 		if mcp_service_ref.namespaceId != self._nacos_settings.NAMESPACE:
 			return False, f"namespace id not compatible, local namespace id:{self._nacos_settings.NAMESPACE}, remote namespace id:{mcp_service_ref.namespaceId}"
-		return True
+		return True, ""
 
 
 	def get_register_service_name(self) -> str:
