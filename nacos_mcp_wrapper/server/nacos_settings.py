@@ -23,9 +23,9 @@ class NacosSettings(BaseSettings):
 			description="nacos namespace",
 			default="public")
 
-	SERVICE_GROUP : str = Field(
+	SERVICE_GROUP : Optional[str] = Field(
 			description="nacos service group",
-			default="DEFAULT_GROUP")
+			default=None)
 
 	SERVICE_NAME : Optional[str] = Field(
 			description="nacos service name",

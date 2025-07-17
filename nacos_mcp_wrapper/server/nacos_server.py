@@ -188,28 +188,29 @@ class NacosServer(Server):
 		return True
 
 
-	def check_compatible(self,server_detail_info:McpServerDetailInfo) -> bool:
+	def check_compatible(self,server_detail_info:McpServerDetailInfo) -> (bool,str):
 		if server_detail_info.version != self.version:
-			return False
+			return False, f"version not compatible, local version:{self.version}, remote version:{server_detail_info.version}"
 		if server_detail_info.protocol != self.type:
-			return False
+			return False, f"protocol not compatible, local protocol:{self.type}, remote protocol:{server_detail_info.protocol}"
 		if types.ListToolsRequest in self.request_handlers:
 			checkToolsResult = self.check_tools_compatible(server_detail_info)
 			if not checkToolsResult:
-				return False
+				return False , f"tools not compatible, local tools:{self._tmp_tools}, remote tools:{server_detail_info.toolSpec}"
 		mcp_service_ref = server_detail_info.remoteServerConfig.serviceRef
-		if not self.is_service_ref_same(mcp_service_ref):
-			return False
+		is_same_service,error_msg = self.is_service_ref_same(mcp_service_ref)
+		if not is_same_service:
+			return False, error_msg
 
-		return True
+		return True, ""
 
-	def is_service_ref_same(self,mcp_service_ref:McpServiceRef) -> bool:
-		if self.get_register_service_name() != mcp_service_ref.serviceName:
-			return False
-		if mcp_service_ref.groupName != self._nacos_settings.SERVICE_GROUP:
-			return False
+	def is_service_ref_same(self,mcp_service_ref:McpServiceRef) -> (bool,str):
+		if self._nacos_settings.SERVICE_NAME is not None and self._nacos_settings.SERVICE_NAME != mcp_service_ref.serviceName:
+			return False, f"service name not compatible, local service name:{self._nacos_settings.SERVICE_NAME}, remote service name:{mcp_service_ref.serviceName}"
+		if self._nacos_settings.SERVICE_GROUP is not None and self._nacos_settings.SERVICE_GROUP != mcp_service_ref.groupName:
+			return False, f"group name not compatible, local group name:{self._nacos_settings.SERVICE_GROUP}, remote group name:{mcp_service_ref.groupName}"
 		if mcp_service_ref.namespaceId != self._nacos_settings.NAMESPACE:
-			return False
+			return False, f"namespace id not compatible, local namespace id:{self._nacos_settings.NAMESPACE}, remote namespace id:{mcp_service_ref.namespaceId}"
 		return True
 
 
@@ -266,10 +267,11 @@ class NacosServer(Server):
 				self.list_tools()(self._list_tmp_tools)
 
 			if server_detail_info is not None:
-				if not self.check_compatible(server_detail_info):
-					logging.error(f"mcp server info is not compatible,{self.name},version:{self.version}")
+				is_compatible, error_msg = self.check_compatible(server_detail_info)
+				if not is_compatible:
+					logging.error(f"mcp server info is not compatible,{self.name},version:{self.version},reason:{error_msg}")
 					raise NacosException(
-							f"mcp server info is not compatible,{self.name},version:{self.version}"
+							f"mcp server info is not compatible,{self.name},version:{self.version},reason:{error_msg}"
 					)
 				if types.ListToolsRequest in self.request_handlers:
 					self.update_tools(server_detail_info)
@@ -278,8 +280,8 @@ class NacosServer(Server):
 															  or self.type == "mcp-streamable"):
 					await self.naming_client.register_instance(
 							request=RegisterInstanceParam(
-									group_name=self._nacos_settings.SERVICE_GROUP,
-									service_name=self.get_register_service_name(),
+									group_name=server_detail_info.remoteServerConfig.serviceRef.groupName,
+									service_name=server_detail_info.remoteServerConfig.serviceRef.serviceName,
 									ip=self._nacos_settings.SERVICE_IP,
 									port=self._nacos_settings.SERVICE_PORT if self._nacos_settings.SERVICE_PORT else port,
 									ephemeral=self._nacos_settings.SERVICE_EPHEMERAL,
@@ -316,7 +318,7 @@ class NacosServer(Server):
 				endpoint_spec.type = "REF"
 				data = {
 					"serviceName": self.get_register_service_name(),
-					"groupName": self._nacos_settings.SERVICE_GROUP,
+					"groupName": "DEFAULT_GROUP" if self._nacos_settings.SERVICE_GROUP is None else self._nacos_settings.SERVICE_GROUP,
 					"namespaceId": self._nacos_settings.NAMESPACE,
 				}
 				endpoint_spec.data = data
@@ -326,16 +328,6 @@ class NacosServer(Server):
 				server_basic_info.remoteServerConfig = remote_server_config_info
 				server_basic_info.protocol = self.type
 				server_basic_info.frontProtocol = self.type
-				if self._nacos_settings.SERVICE_REGISTER:
-					await self.naming_client.register_instance(
-							request=RegisterInstanceParam(
-									group_name=self._nacos_settings.SERVICE_GROUP,
-									service_name=self.get_register_service_name(),
-									ip=self._nacos_settings.SERVICE_IP,
-									port=self._nacos_settings.SERVICE_PORT if self._nacos_settings.SERVICE_PORT else port,
-									ephemeral=self._nacos_settings.SERVICE_EPHEMERAL,
-							)
-					)
 			try:
 				await self.mcp_service.create_mcp_server(self._nacos_settings.NAMESPACE,
 												   self.name,
@@ -362,5 +354,23 @@ class NacosServer(Server):
 							mcp_tool_specification,
 							endpoint_spec
 						)
+				else:
+					_is_compatible,error_msg = self.check_compatible(version_detail)
+					if not _is_compatible:
+						logging.error(f"mcp server info is not compatible,{self.name},version:{self.version},reason:{error_msg}")
+						raise NacosException(
+								f"mcp server info is not compatible,{self.name},version:{self.version},reason:{error_msg}"
+						)
+			if self._nacos_settings.SERVICE_REGISTER:
+				await self.naming_client.register_instance(
+						request=RegisterInstanceParam(
+								group_name="DEFAULT_GROUP" if self._nacos_settings.SERVICE_GROUP is None else self._nacos_settings.SERVICE_GROUP,
+								service_name=self.get_register_service_name(),
+								ip=self._nacos_settings.SERVICE_IP,
+								port=self._nacos_settings.SERVICE_PORT if self._nacos_settings.SERVICE_PORT else port,
+								ephemeral=self._nacos_settings.SERVICE_EPHEMERAL,
+						)
+				)
+			asyncio.create_task(self.subscribe())
 		except Exception as e:
 			logging.error(f"Failed to register MCP server to Nacos: {e}")
