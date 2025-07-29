@@ -287,6 +287,7 @@ class NacosServer(Server):
 									ephemeral=self._nacos_settings.SERVICE_EPHEMERAL,
 							)
 					)
+				logging.info(f"Register to nacos success,{self.name},version:{self.version}")
 				return
 
 			mcp_tool_specification = None
@@ -335,7 +336,7 @@ class NacosServer(Server):
 												   mcp_tool_specification,
 												   endpoint_spec)
 			except Exception as e:
-				logger.info(f"Failed to create MCP server to Nacos,try to update mcp server")
+				logger.info(f"Found MCP server {self.name} in Nacos,try to update it")
 				version_detail = None
 				try:
 					version_detail = await self.mcp_service.get_mcp_server_detail(
@@ -344,12 +345,12 @@ class NacosServer(Server):
 							self.version
 					)
 				except Exception as e_2:
-					logger.info(f"Cant found version {self.version} of Mcp server {self.name}")
+					logger.info(f" Version {self.version} of Mcp server {self.name} is not in Nacos, try to update it")
 				if version_detail is None:
 					await self.mcp_service.update_mcp_server(
 							self._nacos_settings.NAMESPACE,
 							self.name,
-							False,
+							True,
 							server_basic_info,
 							mcp_tool_specification,
 							endpoint_spec
@@ -372,5 +373,6 @@ class NacosServer(Server):
 						)
 				)
 			asyncio.create_task(self.subscribe())
+			logging.info(f"Register to nacos success,{self.name},version:{self.version}")
 		except Exception as e:
 			logging.error(f"Failed to register MCP server to Nacos: {e}")
