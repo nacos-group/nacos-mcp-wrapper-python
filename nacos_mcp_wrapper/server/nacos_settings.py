@@ -63,6 +63,10 @@ class NacosSettings(BaseSettings):
 			description="nacos connection labels",
 			default={})
 
+	SERVICE_META_DATA : Optional[dict] = Field(
+			description="nacos service metadata",
+			default={})
+
 	class Config:
 		env_prefix = "NACOS_MCP_SERVER_"
 

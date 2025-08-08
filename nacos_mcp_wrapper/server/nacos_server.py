@@ -3,6 +3,7 @@ import json
 import logging
 from contextlib import AbstractAsyncContextManager
 from typing import Literal, Callable, Any
+from importlib import metadata
 
 import jsonref
 from maintainer.ai.model.nacos_mcp_info import McpToolMeta, McpServerDetailInfo, \
@@ -278,6 +279,10 @@ class NacosServer(Server):
 				asyncio.create_task(self.subscribe())
 				if self._nacos_settings.SERVICE_REGISTER and (self.type == "mcp-sse"
 															  or self.type == "mcp-streamable"):
+					version = metadata.version('nacos-mcp-wrapper-python')
+					service_meta_data = {
+						"source": f"nacos-mcp-wrapper-python-{version}",
+						**self._nacos_settings.SERVICE_META_DATA}
 					await self.naming_client.register_instance(
 							request=RegisterInstanceParam(
 									group_name=server_detail_info.remoteServerConfig.serviceRef.groupName,
@@ -285,6 +290,7 @@ class NacosServer(Server):
 									ip=self._nacos_settings.SERVICE_IP,
 									port=self._nacos_settings.SERVICE_PORT if self._nacos_settings.SERVICE_PORT else port,
 									ephemeral=self._nacos_settings.SERVICE_EPHEMERAL,
+									metadata=service_meta_data
 							)
 					)
 				logging.info(f"Register to nacos success,{self.name},version:{self.version}")
@@ -363,6 +369,8 @@ class NacosServer(Server):
 								f"mcp server info is not compatible,{self.name},version:{self.version},reason:{error_msg}"
 						)
 			if self._nacos_settings.SERVICE_REGISTER:
+				version = metadata.version('nacos-mcp-wrapper-python')
+				service_meta_data = {"source": f"nacos-mcp-wrapper-python-{version}",**self._nacos_settings.SERVICE_META_DATA}
 				await self.naming_client.register_instance(
 						request=RegisterInstanceParam(
 								group_name="DEFAULT_GROUP" if self._nacos_settings.SERVICE_GROUP is None else self._nacos_settings.SERVICE_GROUP,
@@ -370,6 +378,7 @@ class NacosServer(Server):
 								ip=self._nacos_settings.SERVICE_IP,
 								port=self._nacos_settings.SERVICE_PORT if self._nacos_settings.SERVICE_PORT else port,
 								ephemeral=self._nacos_settings.SERVICE_EPHEMERAL,
+								metadata=service_meta_data,
 						)
 				)
 			asyncio.create_task(self.subscribe())

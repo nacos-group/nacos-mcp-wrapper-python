@@ -9,7 +9,7 @@ def read_requirements():
 
 setup(
     name='nacos-mcp-wrapper-python',
-    version='1.0.8',  # 项目的版本号
+    version='1.0.9',  # 项目的版本号
 	packages=find_packages(
 			exclude=["test", "*.tests", "*.tests.*", "tests.*", "tests"]), # 自动发现所有包
 	url="https://github.com/nacos-group/nacos-mcp-wrapper-python",
