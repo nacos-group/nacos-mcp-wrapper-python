@@ -1,9 +1,8 @@
 psutil==7.0.0
 anyio==4.9.0
-mcp==1.9.2
-nacos-sdk-python>=2.0.9
+mcp>=1.25.0,<2.0.0
+nacos-sdk-python>=3.0.2
 pydantic==2.11.3
 pydantic-settings==2.9.1
 jsonref==1.1.0
 uvicorn==0.34.2
-nacos-maintainer-sdk-python>=0.1.2

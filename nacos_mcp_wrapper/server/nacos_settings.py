@@ -1,8 +1,9 @@
 from typing import Optional
 
-from nacos.auth import CredentialsProvider
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
+from v2.nacos.common.auth import CredentialsProvider
 
 
 class NacosSettings(BaseSettings):
