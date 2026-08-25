@@ -308,6 +308,7 @@ class NacosServer(Server):
 
 			server_version_detail = ServerVersionDetail()
 			server_version_detail.version = self.version
+			server_version_detail.is_latest = True
 			server_basic_info = McpServerBasicInfo()
 			server_basic_info.name = self.name
 			server_basic_info.versionDetail = server_version_detail
